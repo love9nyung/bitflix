@@ -23,7 +23,7 @@ const HomePresenter = ({ nowPlaying, upcoming, popular, error, loading }) => {
       ) : (
         <Container>
           {nowPlaying && nowPlaying.length > 0 && (
-            <Section title="현재 상영작">
+            <Section title="현재 상영작" font-size="70px">
               {nowPlaying.map((movie) => (
                 <Poster
                   key={movie.id}

@@ -1,6 +1,8 @@
 import React from "react";
 import { Link, withRouter } from "react-router-dom";
 import styled from "styled-components";
+import { AiFillHeart } from "react-icons/ai";
+import { BiSearchAlt } from "react-icons/bi";
 
 const Header = styled.header`
   color: white;
@@ -11,6 +13,7 @@ const Header = styled.header`
   height: 50px;
   display: flex;
   align-items: center;
+  justify-content: center;
   padding: 0px 10px;
   background-color: rgba(20, 20, 20, 0.8);
   box-shadow: 0px 1px 5px 2px rgba(0, 0, 0, 0.8);
@@ -32,6 +35,7 @@ const Item = styled.li`
 
 const StyledLink = styled(Link)`
   height: 50px;
+  font-size: 23px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -50,7 +54,14 @@ export default withRouter(({ location: { pathname } }) => (
         <StyledLink to="/tv">TV</StyledLink>
       </Item>
       <Item current={pathname === "/search"}>
-        <StyledLink to="/search">검색</StyledLink>
+        <StyledLink to="/search">
+          <BiSearchAlt size="30px" />
+        </StyledLink>
+      </Item>
+      <Item current={pathname === "/fav"}>
+        <StyledLink to="/fav">
+          <AiFillHeart color="red" />
+        </StyledLink>
       </Item>
     </List>
   </Header>

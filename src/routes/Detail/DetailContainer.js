@@ -1,138 +1,67 @@
 import React from "react";
-import PropTypes from "prop-types";
-import styled from "styled-components";
-import Loader from "../../components/Loader";
-import Helmet from "react-helmet";
-import Message from "../../components/Message";
-const Container = styled.div`
-  height: calc(100vh - 50px);
-  width: 100%;
-  position: relative;
-  padding: 50px;
-`;
+import { moviesApi, tvApi } from "../../api";
+import DetailPresenter from "./DetailPresenter";
 
-const Backdrop = styled.div`
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-image: url(${(props) => props.bgImage});
-  background-position: center center;
-  background-size: cover;
-  filter: blur(3px);
-  opacity: 0.5;
-  z-index: 0;
-`;
+export default class extends React.Component {
+  // 생성자에서 할 일
+  //  영화 상세 페이지를 표현해야 하는지 설정
+  constructor(props) {
+    super(props);
 
-const Content = styled.div`
-  display: flex;
-  width: 100%;
-  position: relative;
-  z-index: 1;
-  height: 100%;
-`;
+    const {
+      location: { pathname },
+    } = props;
 
-const Cover = styled.div`
-  width: 30%;
-  background-image: url(${(props) => props.bgImage});
-  background-position: center center;
-  background-size: cover;
-  height: 100%;
-  border-radius: 5px;
-`;
+    this.state = {
+      result: null,
+      error: null,
+      loading: true,
+      isMovie: pathname.includes("/movie/"),
+    };
+  }
 
-const Data = styled.div`
-  width: 70%;
-  margin-left: 10px;
-`;
+  async componentDidMount() {
+    // id 가지고 오기 -> match.params
+    // 만약에 id가 안들어오면 HOME으로 강제 이동 -> history의 push함수가 해준다.
+    // 사용자의 요청을 서버가 받고, 재요청 하도록 하는 것을 redirect라고 한다.
 
-const Title = styled.h3`
-  font-size: 32px;
-`;
+    const {
+      match: {
+        params: { id },
+      },
+      history: { push },
+    } = this.props;
 
-const ItemContainer = styled.div`
-  margin: 20px 0;
-`;
+    const { isMovie } = this.state;
+    const parsedId = parseInt(id);
 
-const Item = styled.span``;
+    // 올바르지 않은 id라면
+    if (isNaN(parsedId)) {
+      // Home으로 redirect
+      return push("/");
+    }
 
-const Divider = styled.span`
-  margin: 0 10px;
-`;
+    let result = null;
 
-const Overview = styled.p`
-  font-size: 12px;
-  opacity: 0.7;
-  line-height: 1.5;
-  width: 50%;
-`;
+    try {
+      if (isMovie) {
+        ({ data: result } = await moviesApi.movieDetail(parsedId));
+      } else {
+        ({ data: result } = await tvApi.showDetail(parsedId));
+      }
+    } catch (error) {
+      this.setState({
+        error: "아무것도 찾을 수가 없어요",
+      });
+    } finally {
+      this.setState({ loading: false, result });
+    }
+  }
 
-const DetailPresenter = ({ result, error, loading }) =>
-  loading ? (
-    <>
-      <Helmet>
-        <title>Loading | Ryanflix</title>
-      </Helmet>
-      <Loader />
-    </>
-  ) : error ? (
-    <Message color={"#e74c3c"} text={error} />
-  ) : (
-    <Container>
-      <Helmet>
-        <title>
-          {result.original_title ? result.original_title : result.original_name}{" "}
-          | Ryanflix
-        </title>
-      </Helmet>
-      <Backdrop
-        bgImage={`https://image.tmdb.org/t/p/original${result.backdrop_path}`}
-      ></Backdrop>
-      <Content>
-        <Cover
-          bgImage={
-            result.poster_path
-              ? `https://image.tmdb.org/t/p/original${result.poster_path}`
-              : require("../../assets/noPosterSmall.png")
-          }
-        />
-        <Data>
-          <Title>
-            {result.original_title
-              ? result.original_title
-              : result.original_name}
-          </Title>
-          <ItemContainer>
-            <Item>
-              {result.release_date
-                ? result.release_date.substring(0, 4)
-                : result.first_air_date.substring(0, 4)}
-            </Item>
-            <Divider>·</Divider>
-            <Item>
-              {result.runtime ? result.runtime : result.episode_run_time[0]} min
-            </Item>
-            <Divider>·</Divider>
-            <Item>
-              {result.genres &&
-                result.genres.map((genre, index) =>
-                  index === result.genres.length - 1
-                    ? `${genre.name}`
-                    : `${genre.name} / `
-                )}
-            </Item>
-          </ItemContainer>
-          <Overview>{result.overview}</Overview>
-        </Data>
-      </Content>
-    </Container>
-  );
+  // 함수형 컴포넌트에서 return에 해당된다.
+  render() {
+    const { result, error, loading } = this.state;
 
-DetailPresenter.propTypes = {
-  result: PropTypes.object,
-  error: PropTypes.string,
-  loading: PropTypes.bool.isRequired,
-};
-
-export default DetailPresenter;
+    return <DetailPresenter result={result} error={error} loading={loading} />;
+  }
+}
